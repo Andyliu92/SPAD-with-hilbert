@@ -7,7 +7,7 @@ order = 1
 
 close_threshold = 1000
 
-output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/order1_svd.txt"
+output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/test/1e0.txt"
 
 # wire parameters
 line_width = 0.2
@@ -20,6 +20,9 @@ u = 3.3                     # SPAD source voltage. commonly used: 1.2 1.8 2.5 3.
 
 # sensor position
 sensor_dist = spad_dist     # Readout sensor's distance to the last SPAD sensor
+
+
+TESTING = True
 
 ############################# Functions ####################################
 
@@ -49,6 +52,10 @@ def rMatrixGen(n, Rt, r, r_end) -> np.ndarray:
             result[i, i-1] = result[i, i+1] = -Rt
             result[i, i] = 2 * Rt + r
 
+    if TESTING == True:
+        print(result)
+        outfile.write("rMatrix:\n"+format(result))
+        outfile.write("\n\n")
     return result
 
 
@@ -58,8 +65,13 @@ def iSensor(rMatrix: np.ndarray, u):
         b[0] = u
         U, s, v = linalg.svd(rMatrix)
         sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
-        r = sol[rMatrix.shape[0]-1]
-        return r
+        i = sol[rMatrix.shape[0]-1]
+        if TESTING == True:
+            print("i = ", i)
+            outfile.write("i = ")
+            outfile.write(format(i))
+            outfile.write("\n\n")
+        return i
 
     else:
         return u / rMatrix
@@ -72,6 +84,9 @@ def r_eq(rMatrix: np.ndarray, u):
         U, s, v = linalg.svd(rMatrix)
         sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
         r = u / sol[0]
+        if TESTING == True:
+            print("r = ", r)
+            outfile.write("r = "+format(r)+"\n\n")
         return r
     else:
         return rMatrix
@@ -97,17 +112,24 @@ def r_wire(length, width, Rsq):
 
 
 ###################### Innate parameters #######################
+outfile = open(output_path, 'w')
+
+# manipulate for avoiding overflow.
+scaling_factor = 1e0
+u *= scaling_factor
+Rsq *= scaling_factor
+Rt *= scaling_factor
 
 # wire resistance between 2 sensors
 r = r_wire(spad_dist, line_width, Rsq)
 
 r_end = r_wire(sensor_dist, line_width, Rsq)
 
-# manipulate for avoiding overflow.
-scaling_factor = 1
-u *= scaling_factor
-Rsq *= scaling_factor
-Rt *= scaling_factor
+
+if TESTING == True:
+    outfile.write("u = %lf\n" % u)
+    outfile.write("Rsq = %lf\n" % Rsq)
+    outfile.write("Rt = %lf\n" % Rt)
 
 ################################################################
 
@@ -118,7 +140,6 @@ same = {}
 close = {}
 smallestStep = 1000000
 
-outfile = open(output_path, 'w')
 
 I_left, I_right = iArray(n, Rt, r, r_end, u)
 print("got I array.")
