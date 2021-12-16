@@ -1,13 +1,13 @@
 import numpy as np
-from numpy.linalg import solve
+from numpy import linalg
 
 
 ################## user-define parameters #######################
-order = 3
+order = 1
 
-close_threshold = 5e-8
+close_threshold = 1000
 
-output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/order3_e-5.txt"
+output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/order1_svd.txt"
 
 # wire parameters
 line_width = 0.2
@@ -56,7 +56,8 @@ def iSensor(rMatrix: np.ndarray, u):
     if isinstance(rMatrix, np.ndarray):
         b = np.zeros((rMatrix.shape[0]), dtype=np.float64)
         b[0] = u
-        sol = solve(rMatrix, b)
+        U, s, v = linalg.svd(rMatrix)
+        sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
         r = sol[rMatrix.shape[0]-1]
         return r
 
@@ -68,7 +69,8 @@ def r_eq(rMatrix: np.ndarray, u):
     if isinstance(rMatrix, np.ndarray):
         b = np.zeros((rMatrix.shape[0]), dtype=np.float64)
         b[0] = u
-        sol = solve(rMatrix, b)
+        U, s, v = linalg.svd(rMatrix)
+        sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
         r = u / sol[0]
         return r
     else:
@@ -102,7 +104,7 @@ r = r_wire(spad_dist, line_width, Rsq)
 r_end = r_wire(sensor_dist, line_width, Rsq)
 
 # manipulate for avoiding overflow.
-scaling_factor = 1e-5
+scaling_factor = 1
 u *= scaling_factor
 Rsq *= scaling_factor
 Rt *= scaling_factor
