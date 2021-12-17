@@ -1,5 +1,7 @@
 import numpy as np
 from numpy import linalg
+import csv
+import os
 
 
 ################## user-define parameters #######################
@@ -7,8 +9,11 @@ order = 4
 
 close_threshold = 5e-8
 
-output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/" + \
+log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/" + \
     format(order)+".txt"
+csv_path = "W:/temp/" + \
+    format(order)
+
 
 # wire parameters
 line_width = 0.2
@@ -24,6 +29,22 @@ sensor_dist = spad_dist     # Readout sensor's distance to the last SPAD sensor
 
 
 TESTING = False
+
+
+###################### Innate parameters #######################
+
+outfile = open(log_path, 'w')
+
+# manipulate for avoiding overflow.
+scaling_factor = 1e0
+
+csv_write_step = 1000
+
+if TESTING == True:
+    outfile.write("u = %lf\n" % u)
+    outfile.write("Rsq = %lf\n" % Rsq)
+    outfile.write("Rt = %lf\n" % Rt)
+
 
 ############################# Functions ####################################
 
@@ -110,11 +131,27 @@ def r_wire(length, width, Rsq):
     return length / width * Rsq
 
 
-###################### Innate parameters #######################
-outfile = open(output_path, 'w')
+def writeCSV(data, filepath):
+    csvfile = open(filepath, "a", newline='')
+    writer = csv.writer(csvfile)
+    for i in data:
+        writer.writerows([i])
+    csvfile.close()
 
-# manipulate for avoiding overflow.
-scaling_factor = 1e0
+
+def writeStepCSV(data, filepath):
+    csvfile = open(filepath, "a", newline='')
+    for i in data:
+        csvfile.write("%.3e,\n" % i[4])
+    csvfile.close()
+
+############################# Main #########################################
+
+
+# data preparation
+n = 4**order
+
+
 u *= scaling_factor
 Rsq *= scaling_factor
 Rt *= scaling_factor
@@ -125,21 +162,17 @@ r = r_wire(spad_dist, line_width, Rsq)
 r_end = r_wire(sensor_dist, line_width, Rsq)
 
 
-if TESTING == True:
-    outfile.write("u = %lf\n" % u)
-    outfile.write("Rsq = %lf\n" % Rsq)
-    outfile.write("Rt = %lf\n" % Rt)
-
-################################################################
-
-n = 4**order
-
 all = []
+allstep = []
 same = {}
 close = {}
 smallestStep = 1000000
 
+if os.path.exists(csv_path+"_step.csv"):
+    os.remove(csv_path+"_step.csv")
 
+
+# simulation
 I_left, I_right = iArray(n, Rt, r, r_end, u)
 print("got I array.")
 
@@ -168,16 +201,26 @@ for i in range(0, len(all), 1):
     for j in range(i+1, len(all), 1):
         d1 = abs(all[j][2] - all[i][2])
         d2 = abs(all[j][3] - all[i][3])
+        allstep.append(
+            (all[i][0], all[i][1], all[j][0], all[j][1], max(d1, d2)))
         if all[j][2] == all[i][2] and all[j][3] == all[i][3]:
             same.update({all[i]: all[j]})
         if d1 < close_threshold and d2 < close_threshold:
             close.update({all[i]: all[j]})
             smallestStep = min(smallestStep, max(d1, d2))
             # logic: distinguish two situation by distinguishing the larger difference.
+    if i % csv_write_step == 0:
+        writeStepCSV(allstep, csv_path+"_step.csv")
+        del allstep
+        allstep = []
+    print("\rfinshed round %d" % i, end='')
 
-    print("finshed round %d" % i)
+writeStepCSV(allstep, csv_path+"_step.csv")
 
 
+print('\n')
+
+# Result output
 print(len(all), " Combinations in total.")
 outfile.write(format(len(all)))
 outfile.write(' Combinations in total.\n\n\n')
@@ -205,10 +248,21 @@ for i in close:
 
 outfile.write("\n\n############################################\n\n")
 
-print("Smallest Step:\n ", smallestStep)
-outfile.write("Smallest Step:\n " + format(smallestStep))
+print("Smallest Step = ", smallestStep)
+outfile.write("Smallest Step = " + format(smallestStep)+"\n")
 
-outfile.write("\n\n############################################\n\n")
+print("Largest Current = ", largestCurrent)
+outfile.write("Largest Current = " + format(largestCurrent)+"\n")
 
-print("Largest Current:\n ", largestCurrent)
-outfile.write("Largest Current:\n "+format(largestCurrent))
+ratio = largestCurrent/smallestStep
+
+bit = np.log2(ratio)
+
+print("ratio = ", ratio)
+outfile.write("ratio = "+format(ratio)+"\n")
+print("bit = ", bit)
+outfile.write("bit = "+format(bit)+"\n")
+
+outfile.close()
+
+writeCSV(all, csv_path+".csv")
