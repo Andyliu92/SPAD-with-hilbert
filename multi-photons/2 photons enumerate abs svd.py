@@ -1,13 +1,13 @@
 import numpy as np
-from numpy.linalg import solve
+from numpy import linalg
 
 
 ################## user-define parameters #######################
-order = 3
+order = 2
 
-close_threshold = 5e-8
+close_threshold = 5e-6
 
-output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/order3.txt"
+output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/2.txt"
 
 # wire parameters
 line_width = 0.2
@@ -20,6 +20,9 @@ u = 3.3                     # SPAD source voltage. commonly used: 1.2 1.8 2.5 3.
 
 # sensor position
 sensor_dist = spad_dist     # Readout sensor's distance to the last SPAD sensor
+
+
+TESTING = False
 
 ############################# Functions ####################################
 
@@ -49,6 +52,10 @@ def rMatrixGen(n, Rt, r, r_end) -> np.ndarray:
             result[i, i-1] = result[i, i+1] = -Rt
             result[i, i] = 2 * Rt + r
 
+    if TESTING == True:
+        print(result)
+        outfile.write("rMatrix:\n"+format(result))
+        outfile.write("\n\n")
     return result
 
 
@@ -56,9 +63,15 @@ def iSensor(rMatrix: np.ndarray, u):
     if isinstance(rMatrix, np.ndarray):
         b = np.zeros((rMatrix.shape[0]), dtype=np.float64)
         b[0] = u
-        sol = solve(rMatrix, b)
-        r = sol[rMatrix.shape[0]-1]
-        return r
+        U, s, v = linalg.svd(rMatrix)
+        sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
+        i = sol[rMatrix.shape[0]-1]
+        if TESTING == True:
+            print("i = ", i)
+            outfile.write("i = ")
+            outfile.write(format(i))
+            outfile.write("\n\n")
+        return i
 
     else:
         return u / rMatrix
@@ -68,8 +81,12 @@ def r_eq(rMatrix: np.ndarray, u):
     if isinstance(rMatrix, np.ndarray):
         b = np.zeros((rMatrix.shape[0]), dtype=np.float64)
         b[0] = u
-        sol = solve(rMatrix, b)
+        U, s, v = linalg.svd(rMatrix)
+        sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
         r = u / sol[0]
+        if TESTING == True:
+            print("r = ", r)
+            outfile.write("r = "+format(r)+"\n\n")
         return r
     else:
         return rMatrix
@@ -91,21 +108,28 @@ def iArray(n, Rt, r, r_end, u) -> tuple[np.ndarray, np.ndarray]:
 
 
 def r_wire(length, width, Rsq):
-    return max(length, width) / min(length, width) * Rsq
+    return length / width * Rsq
 
 
 ###################### Innate parameters #######################
+outfile = open(output_path, 'w')
+
+# manipulate for avoiding overflow.
+scaling_factor = 1e0
+u *= scaling_factor
+Rsq *= scaling_factor
+Rt *= scaling_factor
 
 # wire resistance between 2 sensors
 r = r_wire(spad_dist, line_width, Rsq)
 
 r_end = r_wire(sensor_dist, line_width, Rsq)
 
-# manipulate for avoiding overflow.
-scaling_factor = 1
-u *= scaling_factor
-Rsq *= scaling_factor
-Rt *= scaling_factor
+
+if TESTING == True:
+    outfile.write("u = %lf\n" % u)
+    outfile.write("Rsq = %lf\n" % Rsq)
+    outfile.write("Rt = %lf\n" % Rt)
 
 ################################################################
 
@@ -119,6 +143,9 @@ smallestStep = 1000000
 
 I_left, I_right = iArray(n, Rt, r, r_end, u)
 print("got I array.")
+
+outfile.write(format(I_left))
+outfile.write("\n\n")
 
 largestCurrent = I_left[0] + I_left[1]
 
@@ -138,22 +165,51 @@ for i in range(1, n+1, 1):
         all.append((i, j, I1, I2))
 print("got all output for 2 photons")
 
-for i in all:
-    if i[0] == n/2 and i[1] == n/2+1:
-        element1 = i
-    if i[0] == n/2-1 and i[1] == n/2+2:
-        element2 = i
+for i in range(0, len(all), 1):
+    for j in range(i+1, len(all), 1):
+        d1 = abs(all[j][2] - all[i][2])
+        d2 = abs(all[j][3] - all[i][3])
+        if all[j][2] == all[i][2] and all[j][3] == all[i][3]:
+            same.update({all[i]: all[j]})
+        if d1 < close_threshold and d2 < close_threshold:
+            close.update({all[i]: all[j]})
+            smallestStep = min(smallestStep, max(d1, d2))
+            # logic: distinguish two situation by distinguishing the larger difference.
 
-smallestStep = max(abs(element1[2]-element2[2]),
-                   abs(element1[3]-element2[3]))
+    print("finshed round %d" % i)
 
-ratio = largestCurrent/smallestStep
 
-bit = np.log2(ratio)
+print(len(all), " Combinations in total.")
+outfile.write(format(len(all)))
+outfile.write(' Combinations in total.\n\n\n')
 
-print("\n#####################################################\n")
+print("Same: \n ", same)
+outfile.write("Same:\n ")
+outfile.write(format(same))
+outfile.write('\n')
 
-print("largestCurrent = ", largestCurrent)
-print("smallestStep = ", smallestStep)
-print("ratio = ", ratio)
-print("bit = ", bit)
+outfile.write("\n\n############################################\n\n")
+
+print("Close: \n ", close)
+outfile.write("Close:\n ")
+outfile.write(format(close))
+outfile.write('\n')
+
+outfile.write("\n\n############################################\n\n")
+
+print("For all close pairs:")
+for i in close:
+    print(i, ':\n', close[i], '\ncurrent pair max step:', max(
+        abs(i[2]-close[i][2]), abs(i[3]-close[i][3])))
+    outfile.write(format(i)+':\n' + format(close[i]) + '\ncurrent pair max step:' + format(max(
+        abs(i[2]-close[i][2]), abs(i[3]-close[i][3]))) + '\n\n')
+
+outfile.write("\n\n############################################\n\n")
+
+print("Smallest Step:\n ", smallestStep)
+outfile.write("Smallest Step:\n " + format(smallestStep))
+
+outfile.write("\n\n############################################\n\n")
+
+print("Largest Current:\n ", largestCurrent)
+outfile.write("Largest Current:\n "+format(largestCurrent))

@@ -3,11 +3,12 @@ from numpy import linalg
 
 
 ################## user-define parameters #######################
-order = 1
+order = 4
 
-close_threshold = 1000
+close_threshold = 5e-8
 
-output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/test/1e0.txt"
+output_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/" + \
+    format(order)+".txt"
 
 # wire parameters
 line_width = 0.2
@@ -22,7 +23,7 @@ u = 3.3                     # SPAD source voltage. commonly used: 1.2 1.8 2.5 3.
 sensor_dist = spad_dist     # Readout sensor's distance to the last SPAD sensor
 
 
-TESTING = True
+TESTING = False
 
 ############################# Functions ####################################
 
@@ -63,8 +64,7 @@ def iSensor(rMatrix: np.ndarray, u):
     if isinstance(rMatrix, np.ndarray):
         b = np.zeros((rMatrix.shape[0]), dtype=np.float64)
         b[0] = u
-        U, s, v = linalg.svd(rMatrix)
-        sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
+        sol = linalg.solve(rMatrix, b)
         i = sol[rMatrix.shape[0]-1]
         if TESTING == True:
             print("i = ", i)
@@ -81,8 +81,7 @@ def r_eq(rMatrix: np.ndarray, u):
     if isinstance(rMatrix, np.ndarray):
         b = np.zeros((rMatrix.shape[0]), dtype=np.float64)
         b[0] = u
-        U, s, v = linalg.svd(rMatrix)
-        sol = sol = U.T@linalg.inv(np.diag(s))@v@b.T
+        sol = linalg.solve(rMatrix, b)
         r = u / sol[0]
         if TESTING == True:
             print("r = ", r)
