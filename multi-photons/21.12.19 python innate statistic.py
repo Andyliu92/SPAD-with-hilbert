@@ -14,15 +14,9 @@ main changes:
 '''
 
 ################## user-define parameters #######################
-order = 3
+order = 2
 
 close_threshold = 5e-8
-
-log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/" + \
-    format(order)+".txt"
-csv_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/csv/" + \
-    format(order)
-
 
 # wire parameters
 line_width = 0.2
@@ -31,8 +25,13 @@ Rsq = 0.1
 
 # SPAD parameters
 Rtn = 20e3                 # SPAD conduct resistance
-Rtp = 20e3                 # SPAD conduct resistance
+Rtp = 20e0                 # SPAD conduct resistance
 u = 3.3                     # SPAD source voltage. commonly used: 1.2 1.8 2.5 3.3
+
+log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/%d_Rtp_%.2e_Rtn_%.2e.txt" % (
+    order, Rtp, Rtn)
+csv_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/csv/%d_Rtp_%.2e_Rtn_%.2e" % (
+    order, Rtp, Rtn)
 
 # sensor position
 sensor_dist = spad_dist     # Readout sensor's distance to the last SPAD sensor
@@ -94,9 +93,6 @@ allstep = []
 same = {}
 close = {}
 smallestStep = 1000000
-
-if os.path.exists(csv_path+"_step.csv"):
-    os.remove(csv_path+"_step.csv")
 
 
 # simulation
