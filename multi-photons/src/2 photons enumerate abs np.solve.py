@@ -5,13 +5,13 @@ import os
 
 
 ################## user-define parameters #######################
-order = 4
+order = 3
 
 close_threshold = 5e-8
 
 log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/" + \
     format(order)+".txt"
-csv_path = "W:/temp/" + \
+csv_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/csv/" + \
     format(order)
 
 
@@ -213,7 +213,7 @@ for i in range(0, len(all), 1):
         writeStepCSV(allstep, csv_path+"_step.csv")
         del allstep
         allstep = []
-    print("\rfinshed round %d" % i, end='')
+    print("\rfinshed round %d / %d" % (i, len(all)), end='')
 
 writeStepCSV(allstep, csv_path+"_step.csv")
 
