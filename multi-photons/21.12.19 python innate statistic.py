@@ -14,7 +14,7 @@ main changes:
 '''
 
 ################## user-define parameters #######################
-order = 4
+order = 3
 
 close_threshold = 5e-8
 
@@ -30,7 +30,8 @@ spad_dist = 10
 Rsq = 0.1
 
 # SPAD parameters
-Rt = 20e3                 # SPAD conduct resistance
+Rtn = 20e3                 # SPAD conduct resistance
+Rtp = 20e3                 # SPAD conduct resistance
 u = 3.3                     # SPAD source voltage. commonly used: 1.2 1.8 2.5 3.3
 
 # sensor position
@@ -65,7 +66,7 @@ csv_write_step = 1000
 if TESTING == True:
     outfile.write("u = %lf\n" % u)
     outfile.write("Rsq = %lf\n" % Rsq)
-    outfile.write("Rt = %lf\n" % Rt)
+    outfile.write("Rt = %lf\n" % Rtn)
 
 
 ############################# Functions ####################################
@@ -80,7 +81,7 @@ n = 4**order
 
 u *= scaling_factor
 Rsq *= scaling_factor
-Rt *= scaling_factor
+Rtn *= scaling_factor
 
 # wire resistance between 2 sensors
 r = circuit.r_wire(spad_dist, line_width, Rsq)
@@ -99,7 +100,7 @@ if os.path.exists(csv_path+"_step.csv"):
 
 
 # simulation
-I_left, I_right = circuit.iArray(n, Rt, r, r_end, u)
+I_left, I_right = circuit.iArray(n, Rtn, Rtp, r, r_end, u)
 print("got I array.")
 
 outfile.write(format(I_left))
