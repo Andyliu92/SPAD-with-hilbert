@@ -11,10 +11,11 @@ main changes:
 1. use heuristic method to compute largestCurrent and smallestStep
     - the computation for I step of each pair is to figure out the magnitude distribution
 2. innate pdf cdf, processed data output.
+3. adjust Rtp and Rtn separately
 '''
 
 ################## user-define parameters #######################
-order = 2
+order = 3
 
 close_threshold = 5e-8
 
@@ -25,12 +26,12 @@ Rsq = 0.1
 
 # SPAD parameters
 Rtn = 20e3                 # SPAD conduct resistance
-Rtp = 20e0                 # SPAD conduct resistance
+Rtp = 20e1                 # SPAD conduct resistance
 u = 3.3                     # SPAD source voltage. commonly used: 1.2 1.8 2.5 3.3
 
-log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/%d_Rtp_%.2e_Rtn_%.2e.txt" % (
+log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/%d_Rtp_%d_Rtn_%d.txt" % (
     order, Rtp, Rtn)
-csv_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/csv/%d_Rtp_%.2e_Rtn_%.2e" % (
+csv_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/csv/%d_Rtp_%d_Rtn_%d" % (
     order, Rtp, Rtn)
 
 # sensor position
