@@ -8,10 +8,7 @@ import module.statistic as statistic
 '''
 main changes:
 
-1. use heuristic method to compute largestCurrent and smallestStep
-    - the computation for I step of each pair is to figure out the magnitude distribution
-2. innate pdf cdf, processed data output.
-3. adjust Rtp and Rtn separately
+1. for tunning purpose, disabled statistic functions
 '''
 
 ################## user-define parameters #######################
@@ -26,12 +23,12 @@ Rsq = 0.1
 
 # SPAD parameters
 Rtn = 20e3                 # SPAD conduct resistance
-Rtp = 20e1                 # SPAD conduct resistance
+Rtp = 85                 # SPAD conduct resistance
 u = 3.3                     # SPAD source voltage. commonly used: 1.2 1.8 2.5 3.3
 
-log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/%d_Rtp_%d_Rtn_%d.txt" % (
+log_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/log/%d/Rtp_%d_Rtn_%d.txt" % (
     order, Rtp, Rtn)
-csv_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/csv/%d_Rtp_%d_Rtn_%d" % (
+csv_path = "D:/Work/04_Research_Project/21.04.28_Hilbert's_curve/python project/multi-photons/result/csv/%d/Rtp_%d_Rtn_%d" % (
     order, Rtp, Rtn)
 
 # sensor position
@@ -141,12 +138,12 @@ for i in range(0, len(all), 1):
     for j in range(i+1, len(all), 1):
         d1 = abs(all[j][2] - all[i][2])
         d2 = abs(all[j][3] - all[i][3])
-        if X_AXIS_AUTO_SCALING == True:
-            statistic.fxcount(smallestStep, largestCurrent, max(
-                d1, d2), x_axis_function, div_count)
-        else:
-            statistic.fxcount(x_axis_min, x_axis_max, max(
-                d1, d2), x_axis_function, div_count)
+        # if X_AXIS_AUTO_SCALING == True:
+        #     statistic.fxcount(smallestStep, largestCurrent, max(
+        #         d1, d2), x_axis_function, div_count)
+        # else:
+        #     statistic.fxcount(x_axis_min, x_axis_max, max(
+        #         d1, d2), x_axis_function, div_count)
         if all[j][2] == all[i][2] and all[j][3] == all[i][3]:
             same.update({all[i]: all[j]})
         if d1 < close_threshold and d2 < close_threshold:
@@ -154,18 +151,18 @@ for i in range(0, len(all), 1):
     print("\rfinished round %d / %d, %.3f %% complete" %
           (i, len(all), i/len(all)*100), end='')
 
-pdfRes = statistic.pdf(div_count)
-cumulate_sum, cdfRes = statistic.cdf(div_count)
-
-if X_AXIS_AUTO_SCALING == True:
-    div_center = statistic.fDivCenter(
-        smallestStep, largestCurrent, x_axis_function, seq_N)
-else:
-    div_center = statistic.fDivCenter(
-        x_axis_min, x_axis_max, x_axis_function, seq_N)
-
-file.writePdfCdf(div_center, div_count, cumulate_sum,
-                 pdfRes, cdfRes, csv_path+"_pdfcdf.csv")
+# pdfRes = statistic.pdf(div_count)
+# cumulate_sum, cdfRes = statistic.cdf(div_count)
+#
+# if X_AXIS_AUTO_SCALING == True:
+#     div_center = statistic.fDivCenter(
+#         smallestStep, largestCurrent, x_axis_function, seq_N)
+# else:
+#     div_center = statistic.fDivCenter(
+#         x_axis_min, x_axis_max, x_axis_function, seq_N)
+#
+# file.writePdfCdf(div_center, div_count, cumulate_sum,
+#                  pdfRes, cdfRes, csv_path+"_pdfcdf.csv")
 
 file.result_output(all, same, close, smallestStep,
                    largestCurrent, ratio, bit, outfile)
